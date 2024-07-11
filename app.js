@@ -3,19 +3,19 @@
 // ---------------------------------------------
 //
 //     THIS IS NOT A WEBSOCKET CLIENT.
-// 
+//
 // It is a testing utility that can be used to debug websocket connections.
 // ---------------------------------------------
 //
 // The configuration of this tool is hardcoded into this file.
-// The JavaScript will require some modification prior to running the program. 
+// The JavaScript will require some modification prior to running the program.
 // The intended purpose is to do the following:
 //
 // - Open a new TCP socket to the web server.
 // - Send one HTTP request containing headers `Connection: Upgrade` and `Upgrade: websocket`
 // - The server is expected to return a response: `Status 101 Switching Protocols`
 // - The HTTP status 101 response is parsed for proper handshake values.
-// - The http/https connection is upgraded to a ws/wss websocket connection. 
+// - The http/https connection is upgraded to a ws/wss websocket connection.
 // - Incoming websocket messages are displayed realtime as they are received.
 //
 // Before use, edit this file:
@@ -38,7 +38,7 @@ const process = require('process');
 //
 
 // websocketConnectState 6 Websocket opcode 0x09 ping example
-const enableWebsocketPing = false
+const enableWebsocketPing = false;
 // websocketConnectState 8 Message submission Example
 const enableWebsocketMessageSubmission = false;
 // websocketConnectState 10 Fragment Example
@@ -75,19 +75,19 @@ let socketError = false;
 // Required: Modify as needed
 // Address, port, wsPath, wsOrigin, tls=true/false
 // --------------------------------
-let options = {
+const options = {
   port: 8000,
   host: 'localhost',
   wsPath: '/',
   wsOrigin: 'http://localhost:8000',
   tls: false,
   verifyTlsHost: true
-}
+};
 
 if (options.tls) {
   options.servername = options.host;
   options.rejectUnauthorized = options.verifyTlsHost;
-  options.  minVersion = 'TLSv1.2';
+  options.minVersion = 'TLSv1.2';
 }
 
 // Optional: Case of self signed client certificate required by API
@@ -96,14 +96,14 @@ if (options.tls) {
   options.key = fs.readFileSync('key.pem');
   options.cert = fs.readFileSync('cert.pem');
   options.ca = [ fs.readFileSync('ca.pem') ];
-  options.checkServerIdentity = () => { return null; }; 
+  options.checkServerIdentity = () => { return null; };
 }
 */
 
 let appendPortToHost = '';
-if ((options.port !== 80) && (options.port !== 443))
-appendPortToHost = ':' + options.port.toString();
-
+if ((options.port !== 80) && (options.port !== 443)) {
+  appendPortToHost = ':' + options.port.toString();
+}
 //
 // Authorization handshake values
 //
@@ -120,7 +120,7 @@ appendPortToHost = ':' + options.port.toString();
 // Example response:
 //    Sec-WebSocket-Accept: 14MiFPaXo4OV/A+u+fcLHJOOPY4=
 //
-// Note: The random key generated here is intended for debugging. 
+// Note: The random key generated here is intended for debugging.
 // A robust websocket client may use a more robust RNG with improved entropy.
 const charSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 let keyBytes = '';
@@ -231,22 +231,22 @@ function _decodeWebsocketFrame (inData) {
   let opCodeInfo = '';
   switch (opCode) {
     case 0x00:
-      opCodeInfo = '(continuation frame)'      
+      opCodeInfo = '(continuation frame)';
       break;
     case 0x01:
-      opCodeInfo = '(text frame)'      
+      opCodeInfo = '(text frame)';
       break;
     case 0x02:
-      opCodeInfo = '(binary frame)'      
+      opCodeInfo = '(binary frame)';
       break;
     case 0x08:
-      opCodeInfo = '(connection close)'      
+      opCodeInfo = '(connection close)';
       break;
     case 0x09:
-      opCodeInfo = '(ping)'      
+      opCodeInfo = '(ping)';
       break;
     case 0x0A:
-      opCodeInfo = '(pong)'      
+      opCodeInfo = '(pong)';
       break;
     default:
       break;
@@ -270,7 +270,7 @@ function _decodeWebsocketFrame (inData) {
   // depending on the size of the data block
   //
   // Case of 0 to 125 characters
-  let payloadLength = (inData[1] & 0x7F)
+  let payloadLength = (inData[1] & 0x7F);
   let extendedLengthBytes = 0;
   // Case of 126 to 65535 characters 16 bit length
   if (payloadLength === 0x7E) {
@@ -278,30 +278,30 @@ function _decodeWebsocketFrame (inData) {
     extendedLengthBytes = 2;
     payloadLength = (
       (inData[2] << (1 * 8)) |
-      (inData[3] << (0 * 8)));
-  }
+      (inData[3] << (0 * 8))
+    );
   // Case of greater than 65535 characters, 64 bit length
-  else if (payloadLength === 0x7F) {
+  } else if (payloadLength === 0x7F) {
     frameData.frameHeaderLen += 8;
     extendedLengthBytes = 8;
     payloadLength = (
-      (inData[2] << (7 * 8)) | 
-      (inData[3] << (6 * 8)) | 
-      (inData[4] << (5 * 8)) | 
-      (inData[5] << (4 * 8)) | 
-      (inData[6] << (3 * 8)) | 
-      (inData[7] << (2 * 8)) | 
-      (inData[8] << (1 * 8)) | 
+      (inData[2] << (7 * 8)) |
+      (inData[3] << (6 * 8)) |
+      (inData[4] << (5 * 8)) |
+      (inData[5] << (4 * 8)) |
+      (inData[6] << (3 * 8)) |
+      (inData[7] << (2 * 8)) |
+      (inData[8] << (1 * 8)) |
       (inData[9] << (0 * 8)));
   }
   frameData.payloadLength = payloadLength;
 
   // Data sent from client to server over websocket
-  // is masked using byte by byte XOR, using 
+  // is masked using byte by byte XOR, using
   // a 4 byte 32 bit mask included in the frame header.
   //
   // The MASK bit determines if the data is masked.
-  // A masked header will be larger by 4 btyes to include the key.
+  // A masked header will be larger by 4 bytes to include the key.
   //
   // Inbound data from server to client is never masked.
   // Outbound data from client to server is always masked.
@@ -324,14 +324,14 @@ function _decodeWebsocketFrame (inData) {
         inData[4],
         inData[5],
         inData[6],
-        inData[7]]);      
+        inData[7]]);
     }
     if (frameData.frameHeaderLen === 14) {
       maskKey = Uint8Array.from([
         inData[10],
         inData[11],
         inData[12],
-        inData[13]])
+        inData[13]]);
     }
   } // maskFlag
   frameData.maskFlag = maskFlag;
@@ -339,7 +339,7 @@ function _decodeWebsocketFrame (inData) {
 
   // Separate frame header from frame data (Type Buffer)
   let messageBuffer = Buffer.from(inData.subarray(frameData.frameHeaderLen, inData.length));
-  
+
   // Convert to 8 bit data to apply websocket mask using JavaScript type Uint8Array
   // Output XOR values will be places as number elements in an Array
   if ((frameData.maskFlag) && (messageBuffer.length > 0)) {
@@ -359,11 +359,10 @@ function _decodeWebsocketFrame (inData) {
 
   // Add the message part of the data packet to the output object
   frameData.messageUtf8 = messageBuffer.toString('utf8');
-  
+
   // console.log(JSON.stringify(frameData, null, 2));
   return frameData;
 } // _decodeWebsocketFrame ()
-
 
 /**
  * Generate one random unsigned 8 bit byte
@@ -379,7 +378,7 @@ function _random8bit () {
 /**
  * Construct the RFC-6455 websocket frame header for outgoing text message
  * @param {Buffer|String} inMessage - Packet of stream data used to determine length in 8 bit bytes
- * @param {Boolean} frag - Optional flag to indicate iMessage is part of a fragmented packet 
+ * @param {Boolean} frag - Optional flag to indicate iMessage is part of a fragmented packet
  * @returns {Buffer} Returns Buffer containing 2 to 14 bytes websocket header + XOR masked data
  */
 function _encodeWebsocketFrame (inMessage, frag) {
@@ -413,7 +412,7 @@ function _encodeWebsocketFrame (inMessage, frag) {
     }
   }
   // Websocket header FIN bit to identify fragments
-  let notContinuationFrameBit = 1; 
+  let notContinuationFrameBit = 1;
   if ((fragmentState === 1) || (fragmentState === 2)) {
     notContinuationFrameBit = 0;
   }
@@ -510,14 +509,14 @@ function _encodeWebsocketFrame (inMessage, frag) {
 
 /**
  * Construct the RFC-6455 websocket frame header for websocket opcode command (no data)
- * @param {Number} command 
+ * @param {Number} command
  * @returns {Buffer} Returns buffer containing 2 to 14 byte header without data
  */
 function _encodeCommandFrame (command) {
   // 8 = close, 9 = ping, 10 = pong, else error
   if ((command === 0x08) || (command === 0x09) || (command === 0x0a)) {
     // Client configuration
-    const notContinuationFrameBit = 1; 
+    const notContinuationFrameBit = 1;
     const opcode = command; // text frame (0x02 = binary frame)
     const maskedFrameBit = 1;
     const payloadLength = 0;
@@ -532,7 +531,7 @@ function _encodeCommandFrame (command) {
       headerArray.push(mask32[2]);
       headerArray.push(mask32[3]);
     }
-      // Return as NodeJs type Buffer
+    // Return as NodeJs type Buffer
     const outBuffer = Buffer.from(headerArray);
     return outBuffer;
   } else {
@@ -597,15 +596,15 @@ function printInFrame (encodedWebsocketFrame) {
 //
 // In this example, the web socket can be connected to an IRC server
 // which includes websocket compatibility. In this case unrealIRCd
-// was downloaded, compiled and installed as a stand alone IRC 
+// was downloaded, compiled and installed as a stand alone IRC
 // server for testing.
 //
 // IRC servers will periodically issue a PING requests to the IRC client.
 //
 // In this example, the client will issue an IRC nickname registration request.
-// It will then wait for inbound "PING" request. 
+// It will then wait for inbound "PING" request.
 // If PING is received, a PONG is sent to the websocket with the correct nonce.
-// 
+//
 // IRC client command:    "NICK mynick"
 // IRC client command:    "USER myuser 8 * :Real Name"
 // IRC server request:    "PING :123456" where 123456 is random nonce.
@@ -631,7 +630,7 @@ function customizeDynamicResponseInitialize () {
   const encodedFrame = _encodeWebsocketFrame(ircConnectPassCommand +
     'NICK mynick\r\nUSER myuser 8 * :Real Name\r\n');
   socket.write(encodedFrame);
-  printOutFrame(encodedFrame)
+  printOutFrame(encodedFrame);
   //
   // --------------------------- End ----------------------------
 } // customizeDynamicResponseInitialize()
@@ -651,17 +650,16 @@ function customizeDynamicResponsesHandler (encodedWebsocketFrame) {
   // ----------------- Custom code goes here --------------------
   //
   if (inDataObj.messageUtf8.split(' ')[0] === 'PING') {
-    let encodedOutFrame;
-    encodedOutFrame = _encodeWebsocketFrame('PONG ' + inDataObj.messageUtf8.split(' ')[1]);
+    const encodedOutFrame = _encodeWebsocketFrame('PONG ' + inDataObj.messageUtf8.split(' ')[1]);
     socket.write(encodedOutFrame);
-    printOutFrame(encodedOutFrame) ;
+    printOutFrame(encodedOutFrame);
     // Timer
     const exitStateAfterMilliseconds = 5000; // 5 seconds
     setTimeout(() => {
       // Custom response has occurred, wait for further messages, then continue
       customDynamicResponsesActive = false;
       if (websocketConnectState === 12) {
-        console.log('Custom responses complete, advancing state.')
+        console.log('Custom responses complete, advancing state.');
         websocketConnectState = 13;
         console.log('websocketConnectState', websocketConnectState);
       }
@@ -685,7 +683,7 @@ if (options.tls) {
     console.log('tls.Connect callback');
   });
 } else {
-  socket = net.connect(options, () => { 
+  socket = net.connect(options, () => {
     console.log('Connect callback');
   });
 }
@@ -773,7 +771,7 @@ socket.on('data', (data) => {
 socket.on('timeout', () => {
   console.log('Event: socket.timeout');
   socketError = true;
-})
+});
 
 socket.on('end', () => {
   console.log('Event: socket.end');
@@ -839,7 +837,7 @@ function timerHandler () {
         console.log('websocketConnectState', websocketConnectState);
       }
 
-    // 3 - The 'connect' is handled by 'data' events on the socket event listener
+      // 3 - The 'connect' is handled by 'data' events on the socket event listener
 
     // 4 - Successful websocket upgrade response
     } else if (websocketConnectState === 4) {
@@ -861,8 +859,8 @@ function timerHandler () {
       if (enableWebsocketPing) {
         const pingOpcode = 0x09;
         const commandFrame = _encodeCommandFrame(pingOpcode);
-        printOutFrame(commandFrame)
-        socket.write(commandFrame)
+        printOutFrame(commandFrame);
+        socket.write(commandFrame);
         websocketConnectState = 7;
         console.log('websocketConnectState', websocketConnectState);
       } else {
@@ -883,20 +881,20 @@ function timerHandler () {
     } else if (websocketConnectState === 8) {
       if (enableWebsocketMessageSubmission) {
         if (websocketMessageIndex < websocketOutputText.length) {
-          const encodedFrame = 
+          const encodedFrame =
             _encodeWebsocketFrame(websocketOutputText[websocketMessageIndex]);
           socket.write(encodedFrame);
-          printOutFrame(encodedFrame)
+          printOutFrame(encodedFrame);
         } else {
           wsWriteDelayCount = 0;
           websocketConnectState = 9;
           console.log('websocketConnectState', websocketConnectState);
         }
-        websocketMessageIndex++
+        websocketMessageIndex++;
       } else {
         wsWriteDelayCount = 0;
         websocketConnectState = 9;
-        console.log('websocketConnectState', websocketConnectState, '(Message submission disabled)');        
+        console.log('websocketConnectState', websocketConnectState, '(Message submission disabled)');
       }
 
     // 9 - Delay timer
@@ -915,63 +913,62 @@ function timerHandler () {
         if (fragmentMessageIndex < websocketFragmentedOutputText.length) {
           // Case of Fragment, FIN=0, append Boolean argument set to true to identify fragment.
           // This is better explained in comments above in _encodeWebSocketFrame()
-          let encodedFrame = 
+          let encodedFrame =
             _encodeWebsocketFrame(websocketFragmentedOutputText[fragmentMessageIndex], true);
           // Case of final packet, FIN=1
           if (fragmentMessageIndex >= websocketFragmentedOutputText.length - 1) {
-            encodedFrame = 
+            encodedFrame =
               _encodeWebsocketFrame(websocketFragmentedOutputText[fragmentMessageIndex]);
           }
-          socket.write(encodedFrame);          
-          printOutFrame(encodedFrame)
+          socket.write(encodedFrame);
+          printOutFrame(encodedFrame);
         } else {
           wsWriteDelayCount = 0;
           websocketConnectState = 11;
           console.log('websocketConnectState', websocketConnectState);
         }
-        fragmentMessageIndex++
+        fragmentMessageIndex++;
       } else {
         wsWriteDelayCount = 0;
         websocketConnectState = 11;
         console.log('websocketConnectState', websocketConnectState, '(Fragment submission disabled)');
       }
 
-
     // 11 - Delay timer
-  } else if (websocketConnectState === 11) {
-    wsWriteDelayCount++;
-    if (wsWriteDelayCount >= wsWriteDelayLimit) {
-      wsWriteDelayCount = 0;
-      websocketConnectState = 12;
-      console.log('websocketConnectState', websocketConnectState, '(Timer: 1 second)');
-    }
-
-  // 12 - Custom dynamic websocket response, pass to dynamic response generator
-  } else if (websocketConnectState === 12) {
-    if (enableCustomDynamicResponses) {
-      if (!customDynamicResponsesActive) {
-        customDynamicResponsesActive = true;
-        customizeDynamicResponseInitialize();
-      } else {
-        customDynamicResponseWatchdogCount++;
-        // Time duration is (count * sendIntervalMs) in milliseconds
-        if (customDynamicResponseWatchdogCount > customDynamicResponseWatchdogLimit) {
-          console.log('Dynamic response watchdog timer expired. Advancing state.');
-          wsWriteDelayCount = 0;
-          websocketConnectState = 13;
-          console.log('websocketConnectState', websocketConnectState);
-        }
-      }
-    } else {
-      wsWriteDelayCount = 0;
-      websocketConnectState = 13;
-      console.log('websocketConnectState', websocketConnectState, '(Dynamic responses disabled)');      
-    }
-
-  // 13 - Delay timer
-  } else if (websocketConnectState === 13) {
+    } else if (websocketConnectState === 11) {
       wsWriteDelayCount++;
-      const endOfSequenceExitDelay = wsWriteDelayLimit // cycles
+      if (wsWriteDelayCount >= wsWriteDelayLimit) {
+        wsWriteDelayCount = 0;
+        websocketConnectState = 12;
+        console.log('websocketConnectState', websocketConnectState, '(Timer: 1 second)');
+      }
+
+    // 12 - Custom dynamic websocket response, pass to dynamic response generator
+    } else if (websocketConnectState === 12) {
+      if (enableCustomDynamicResponses) {
+        if (!customDynamicResponsesActive) {
+          customDynamicResponsesActive = true;
+          customizeDynamicResponseInitialize();
+        } else {
+          customDynamicResponseWatchdogCount++;
+          // Time duration is (count * sendIntervalMs) in milliseconds
+          if (customDynamicResponseWatchdogCount > customDynamicResponseWatchdogLimit) {
+            console.log('Dynamic response watchdog timer expired. Advancing state.');
+            wsWriteDelayCount = 0;
+            websocketConnectState = 13;
+            console.log('websocketConnectState', websocketConnectState);
+          }
+        }
+      } else {
+        wsWriteDelayCount = 0;
+        websocketConnectState = 13;
+        console.log('websocketConnectState', websocketConnectState, '(Dynamic responses disabled)');
+      }
+
+    // 13 - Delay timer
+    } else if (websocketConnectState === 13) {
+      wsWriteDelayCount++;
+      const endOfSequenceExitDelay = wsWriteDelayLimit; // cycles
       if (wsWriteDelayCount >= endOfSequenceExitDelay) {
         wsWriteDelayCount = 0;
         websocketConnectState = 14;
@@ -983,12 +980,12 @@ function timerHandler () {
       if (enableCloseSocketAtEnd) {
         const closeOpcode = 0x08;
         const commandFrame = _encodeCommandFrame(closeOpcode);
-        printOutFrame(commandFrame)
-        socket.write(commandFrame)
+        printOutFrame(commandFrame);
+        socket.write(commandFrame);
         websocketConnectState = 15;
         console.log('websocketConnectState', websocketConnectState);
       } else {
-        websocketConnectState = 99;  
+        websocketConnectState = 99;
         console.log('websocketConnectState', websocketConnectState, '(Auto-close disabled, waiting forever...)');
       }
 
@@ -996,7 +993,7 @@ function timerHandler () {
     } else if (websocketConnectState === 15) {
       websocketConnectState = 99;
       console.log('websocketConnectState', websocketConnectState, '(Timer: 5 seconds)');
-      setTimeout(function() {
+      setTimeout(function () {
         console.log('Sequencer reached end. Destroying TCP socket');
         console.log('\n');
         socket.destroy();
@@ -1006,4 +1003,3 @@ function timerHandler () {
   }
 }
 setInterval(timerHandler, sendIntervalMs);
-
